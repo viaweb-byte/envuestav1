@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Encuesta de satisfacción</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
+<style>
+:root{--bg:#F5F8F7;--card:#FFFFFF;--ink:#14232B;--muted:#5A6B72;--line:#D3DEDB;--accent:#0F766E;--accent-ink:#FFFFFF;--warn:#B42318;--sel:#E1F2EF;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1A1F;--card:#16252C;--ink:#E8F0EE;--muted:#9BB0B0;--line:#2B3E45;--accent:#3CC4B5;--accent-ink:#06211E;--warn:#FF8A80;--sel:#1B3A3A}}
+:root[data-theme="dark"]{--bg:#0F1A1F;--card:#16252C;--ink:#E8F0EE;--muted:#9BB0B0;--line:#2B3E45;--accent:#3CC4B5;--accent-ink:#06211E;--warn:#FF8A80;--sel:#1B3A3A}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+main{max-width:680px;margin:0 auto;padding:32px 20px 64px}
+h1{font-size:clamp(2rem,6vw,3rem);line-height:1.05;font-weight:800;margin:0 0 12px;letter-spacing:-.02em}
+.lead{color:var(--muted);margin:0 0 24px;max-width:52ch}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:10px 0;z-index:2}
+.track{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--accent);transition:width .25s}
+.count{font-size:.85rem;color:var(--muted);margin-top:6px}
+fieldset{border:0;padding:0;margin:0 0 28px;min-width:0}
+legend{font-weight:600;font-size:1.15rem;padding:0;margin-bottom:12px}
+.opt{display:flex;gap:12px;align-items:center;padding:12px 14px;margin-bottom:8px;background:var(--card);border:1.5px solid var(--line);border-radius:10px;cursor:pointer}
+.opt:has(input:checked){border-color:var(--accent);background:var(--sel)}
+.opt:has(input:focus-visible){outline:3px solid var(--accent);outline-offset:2px}
+.opt input{accent-color:var(--accent);width:18px;height:18px;margin:0}
+.scale{display:grid;grid-template-columns:repeat(11,1fr);gap:4px}
+.scale label{position:relative}
+.scale input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.scale span{display:block;text-align:center;padding:10px 0;border:1.5px solid var(--line);border-radius:8px;background:var(--card);font-weight:600}
+.scale input:checked+span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.scale input:focus-visible+span{outline:3px solid var(--accent);outline-offset:2px}
+.ends{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-top:6px}
+.stars{display:flex;gap:6px}
+.stars label{cursor:pointer;position:relative}
+.stars input{position:absolute;opacity:0;inset:0}
+.stars span{font-size:2.2rem;line-height:1;color:var(--line);transition:color .1s}
+.stars label.on span{color:#E9A700}
+.stars input:focus-visible+span{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
+textarea{width:100%;min-height:110px;padding:12px;font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:10px;resize:vertical}
+textarea:focus{outline:3px solid var(--accent);outline-offset:1px}
+.err{color:var(--warn);font-size:.9rem;margin-top:4px;min-height:1.2em}
+button{font:inherit;font-weight:600;background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:14px 26px;cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.done{display:none}
+.res{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:16px;margin:20px 0}
+.res dt{color:var(--muted);font-size:.9rem}
+.res dd{margin:0 0 12px;font-weight:600}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+@media (max-width:520px){.scale{grid-template-columns:repeat(6,1fr)}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <div id="form-view">
+    <h1>Cuéntanos cómo te fue</h1>
+    <p class="lead">Son 6 preguntas y toma menos de dos minutos. Tus respuestas nos ayudan a mejorar.</p>
+    <div class="bar"><div class="track"><div class="fill" id="fill"></div></div><div class="count" id="count">0 de 6 respondidas</div></div>
+
+    <form id="f" novalidate>
+      <fieldset data-q="nps">
+        <legend>¿Qué tan probable es que nos recomiendes a un amigo o colega?</legend>
+        <div class="scale" id="nps"></div>
+        <div class="ends"><span>Nada probable</span><span>Muy probable</span></div>
+        <div class="err" role="alert"></div>
+      </fieldset>
+
+      <fieldset data-q="stars">
+        <legend>¿Cómo calificas tu experiencia general?</legend>
+        <div class="stars" id="stars"></div>
+        <div class="err" role="alert"></div>
+      </fieldset>
+
+      <fieldset data-q="freq">
+        <legend>¿Con qué frecuencia usas el servicio?</legend>
+        <label class="opt"><input type="radio" name="freq" value="Todos los días"> Todos los días</label>
+        <label class="opt"><input type="radio" name="freq" value="Varias veces por semana"> Varias veces por semana</label>
+        <label class="opt"><input type="radio" name="freq" value="Una vez al mes"> Una vez al mes</label>
+        <label class="opt"><input type="radio" name="freq" value="Es mi primera vez"> Es mi primera vez</label>
+        <div class="err" role="alert"></div>
+      </fieldset>
+
+      <fieldset data-q="like">
+        <legend>¿Qué es lo que más te gusta? (elige todas las que quieras)</legend>
+        <label class="opt"><input type="checkbox" name="like" value="Facilidad de uso"> Facilidad de uso</label>
+        <label class="opt"><input type="checkbox" name="like" value="Rapidez"> Rapidez</label>
+        <label class="opt"><input type="checkbox" name="like" value="Atención al cliente"> Atención al cliente</label>
+        <label class="opt"><input type="checkbox" name="like" value="Precio"> Precio</label>
+        <div class="err" role="alert"></div>
+      </fieldset>
+
+      <fieldset data-q="age">
+        <legend>¿En qué rango de edad estás?</legend>
+        <label class="opt"><input type="radio" name="age" value="Menos de 25"> Menos de 25</label>
+        <label class="opt"><input type="radio" name="age" value="25 a 44"> 25 a 44</label>
+        <label class="opt"><input type="radio" name="age" value="45 o más"> 45 o más</label>
+        <div class="err" role="alert"></div>
+      </fieldset>
+
+      <fieldset data-q="comment" data-optional="1">
+        <legend>¿Algo más que quieras contarnos? (opcional)</legend>
+        <textarea id="comment" maxlength="600" placeholder="Escribe aquí tus comentarios"></textarea>
+      </fieldset>
+
+      <button type="submit">Enviar encuesta</button>
+    </form>
+  </div>
+
+  <div class="done" id="done">
+    <h1>¡Gracias por responder!</h1>
+    <p class="lead">Recibimos tus respuestas. Este es el resumen:</p>
+    <dl class="res" id="summary"></dl>
+    <div class="row"><button class="ghost" id="again" type="button">Responder de nuevo</button></div>
+  </div>
+</main>
+
+<script>
+(function(){
+  var TOTAL = 6;
+  var nps = document.getElementById('nps'), stars = document.getElementById('stars');
+  for (var i = 0; i <= 10; i++) {
+    nps.insertAdjacentHTML('beforeend','<label><input type="radio" name="nps" value="'+i+'" aria-label="'+i+'"><span>'+i+'</span></label>');
+  }
+  for (var s = 1; s <= 5; s++) {
+    stars.insertAdjacentHTML('beforeend','<label><input type="radio" name="stars" value="'+s+'" aria-label="'+s+(s===1?' estrella':' estrellas')+'"><span>★</span></label>');
+  }
+  var f = document.getElementById('f');
+
+  function paintStars(){
+    var v = +(f.elements.stars.value || 0);
+    stars.querySelectorAll('label').forEach(function(l,idx){ l.classList.toggle('on', idx < v); });
+  }
+  function getVals(){
+    var likes = [].slice.call(f.querySelectorAll('input[name=like]:checked')).map(function(x){return x.value});
+    return {
+      nps: f.elements.nps.value, stars: f.elements.stars.value, freq: f.elements.freq.value,
+      like: likes, age: f.elements.age.value, comment: document.getElementById('comment').value.trim()
+    };
+  }
+  function progress(){
+    var v = getVals();
+    var n = [v.nps!=='', v.stars!=='', v.freq!=='', v.like.length>0, v.age!=='', v.comment!==''].filter(Boolean).length;
+    document.getElementById('fill').style.width = (n/TOTAL*100)+'%';
+    document.getElementById('count').textContent = n+' de '+TOTAL+' respondidas';
+  }
+  f.addEventListener('change', function(){ paintStars(); progress(); });
+  f.addEventListener('input', progress);
+
+  f.addEventListener('submit', function(e){
+    e.preventDefault();
+    var v = getVals(), first = null;
+    var checks = {nps:v.nps!=='', stars:v.stars!=='', freq:v.freq!=='', like:v.like.length>0, age:v.age!==''};
+    var msgs = {nps:'Elige un número del 0 al 10.', stars:'Elige una calificación de 1 a 5 estrellas.', freq:'Selecciona una opción.', like:'Elige al menos una opción.', age:'Selecciona un rango de edad.'};
+    Object.keys(checks).forEach(function(k){
+      var fs = f.querySelector('[data-q='+k+']'), err = fs.querySelector('.err');
+      err.textContent = checks[k] ? '' : msgs[k];
+      if (!checks[k] && !first) first = fs;
+    });
+    if (first) { first.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+    var body = [
+      'Probabilidad de recomendar: '+v.nps+' / 10',
+      'Experiencia general: '+v.stars+' de 5 estrellas',
+      'Frecuencia de uso: '+v.freq,
+      'Lo que más le gusta: '+v.like.join(', '),
+      'Rango de edad: '+v.age,
+      'Comentarios: '+(v.comment || 'Sin comentarios')
+    ].join('\n');
+    var mailto = 'mailto:osopanda3004chancho@gmail.com?subject='+encodeURIComponent('Nueva respuesta de encuesta')+'&body='+encodeURIComponent(body);
+    window.location.href = mailto;
+    var rows = [
+      ['Probabilidad de recomendar', v.nps+' / 10'],
+      ['Experiencia general', v.stars+' de 5 estrellas'],
+      ['Frecuencia de uso', v.freq],
+      ['Lo que más te gusta', v.like.join(', ')],
+      ['Rango de edad', v.age],
+      ['Comentarios', v.comment || 'Sin comentarios']
+    ];
+    var box = document.getElementById('summary'); box.innerHTML = '';
+    rows.forEach(function(r){
+      var dt = document.createElement('dt'), dd = document.createElement('dd');
+      dt.textContent = r[0]; dd.textContent = r[1]; box.appendChild(dt); box.appendChild(dd);
+    });
+    document.getElementById('form-view').style.display = 'none';
+    document.getElementById('done').style.display = 'block';
+    window.scrollTo(0,0);
+  });
+
+  document.getElementById('again').addEventListener('click', function(){
+    f.reset(); paintStars(); progress();
+    document.getElementById('done').style.display = 'none';
+    document.getElementById('form-view').style.display = 'block';
+    window.scrollTo(0,0);
+  });
+})();
+</script>
+</body>
+</html>
